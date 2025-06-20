@@ -2,7 +2,6 @@
 FPGA Market Data Feed Handler + Order Matching Engine
 
 # FPGA Market Data Feed Handler + Order Matching Engine
-## Complete 12-18 Month Roadmap with Resources
 
 ---
 
