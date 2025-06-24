@@ -2,7 +2,7 @@
 *18-Month Journey from Finance Fundamentals to Profitable Automated Trading*
 
 ## 🎯 Project Goal
-Build a complete high-frequency trading system on FPGA that generates consistent income through automated trading strategies, starting with <$5K capital and scaling to $25K+ through reinvested profits.
+Build a complete high-frequency trading system on FPGA that generates consistent income through automated trading strategies.
 
 **Target Outcome:** A professional-grade trading system that:
 - Processes market data with sub-microsecond latency
