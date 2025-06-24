@@ -8,7 +8,6 @@ Build a complete high-frequency trading system on FPGA that generates consistent
 - Processes market data with sub-microsecond latency
 - Executes profitable trading strategies automatically
 - Manages risk comprehensively
-- Generates $500-5000+ monthly income
 
 ---
 
