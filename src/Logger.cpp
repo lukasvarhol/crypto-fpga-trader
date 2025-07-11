@@ -4,7 +4,7 @@
 //#include <json/json.h>
 #include <string>
 
-void Logger::line_getter(const std::string& FILENAME) {
+void line_getter(const std::string& FILENAME) {
   std::ifstream myfile (FILENAME); // instance of ifstream object
   if (myfile.is_open()) {
     std::string line;
