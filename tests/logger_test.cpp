@@ -1,33 +1,52 @@
 //
 // Created by Lukas Varhol on 11/7/2025.
 //
-#include "../src/logging/logger.cpp"
+// #include "../include/logging/logger.h"
 #include <ctime>
 #include <filesystem>
 #include <fstream>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 
 // child logger class
 class TestableLogger : public Logger {
 public:
-  explicit TestableLogger(const std::filesystem::path &log_directory) : Logger(log_directory) {}
-  void setMockDate(const std::string &date) {
+  static TestableLogger &getInstance() {
+    static TestableLogger instance;
+    return instance;
+  }
+
+  void initialize_for_test(const std::filesystem::path &log_dir) {
+    base_dir_ = log_dir; // base_dir_ is protected member of Logger Class
+    std::filesystem::create_directories(base_dir_);
+    clear_cache();
+  }
+
+  void set_mock_date(const std::string &date) {
     mock_date_ = date;
-    clearCache();
+    clear_cache();
   }
-  void clearMocks() {
-    mock_date_.clear();
-    clearCache();
+
+  void clear_mocks() {
+    mock_date_ = date;
+    clear_cache();
   }
-  void clearCache() {
+
+  void clear_cache() {
     std::lock_guard<std::mutex> lock(cache_mutex_);
     cached_date_.clear();
-    cached_date_dir.clear();
+    cached_date_dir_.clear();
+  }
+
+  void reset_for_testing() {
+    clear_mocks();
+    clear_cache();
+    base_directory_.clear();
   }
 
 protected:
-  std::string getCurrentDate() const override {
+  std::string get_current_date() const override {
     if (!mock_date_.empty()) {
       return mock_date_;
     }
@@ -35,8 +54,11 @@ protected:
   }
 
 private:
+  TestableLogger() = default;
   std::string mock_date_;
 };
+
+#define TEST_LOG TestableLogger::getInstance()
 
 
 // test fixture
@@ -48,8 +70,13 @@ protected:
 
     test_dir = std::filesystem::temp_directory_path() / ("logger_test_");
     std::filesystem::create_directory(test_dir);
+    TEST_LOG.reset_for_testing();
+    TEST_LOG.initialize_for_test(test_dir);
   }
-  void TearDown() override { std::filesystem::remove_all(test_dir); }
+  void TearDown() override {
+    TEST_LOG.reset_for_testing();
+    std::filesystem::remove_all(test_dir);
+  }
 
   void createOldLogFile(const std::string &date_dir, const std::string &file_name, int days_old) {
     std::filesystem::path file_path = test_dir / date_dir / file_name;
@@ -66,6 +93,33 @@ protected:
     auto old_time = now - std::chrono::hours(24 * days_old);
     std::filesystem::last_write_time(file_path, old_time);
   }
+
+  std::string read_file_content(const std::string& relative_path) {
+    std::ifstream file(test_dir / relative_path);
+    if (!file.is_open()) {
+      return "";
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+  }
+
+  std::vector<std::string> read_file_lines(const std::string& relative_path) {
+    std::vector<std::string> lines;
+    std::ifstream file(test_dir / relative_path);
+
+    if (!file.is_open()) {
+      return lines;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+      lines.push_back(line);
+    }
+
+    return lines;
+  }
 };
 // ==============================================================================
 // Tests
@@ -74,10 +128,8 @@ protected:
 // File Creation and Destruction
 
 TEST_F(LoggerTest, FilesCreatedOnStart) {
-  TestableLogger logger(test_dir);
-
   std::string date = "2025-01-01";
-  logger.setMockDate(date);
+  TEST_LOG.set_mock_date(date);
 
   std::filesystem::path trades_file = test_dir / date / "trades.log";
   std::filesystem::path orders_file = test_dir / date / "orders.log";
@@ -93,35 +145,31 @@ TEST_F(LoggerTest, FilesCreatedOnStart) {
 }
 
 TEST_F(LoggerTest, CreatesNewDirectoryOnDateChange) {
-  TestableLogger logger(test_dir);
-
   std::string day1 = "2025-01-01";
   std::string day2 = "2025-01-02";
 
-  logger.setMockDate(day1);
-  logger.log(TRADES, INFO, "Today is 2025-01-01");
+  TEST_LOG.set_mock_date(day1);
+  TEST_LOG.info(TRADES, "Today is 2025-01-01");
 
-  logger.setMockDate(day2);
-  logger.log(TRADES, INFO, "Today is 2025-01-02");
+  TEST_LOG.set_mock_date(day2);
+  TEST_LOG.info(TRADES, "Today is 2025-01-02");
 
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2025-01-01/trades.log"));
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2025-01-02/trades.log"));
 }
 
 TEST_F(LoggerTest, SingleMessageCreatesLog) {
-  TestableLogger logger(test_dir);
-  logger.setMockDate("2025-01-01");
+  TEST_LOG.set_mock_date("2025-01-01");
 
-  logger.log(TRADES, INFO, "Dummy");
+  TEST_LOG.info(TRADES, "Dummy");
   ASSERT_EQ(std::filesystem::exists(test_dir.string() + "/2025-01-01/dummy.log"), true);
 }
 
 TEST_F(LoggerTest, MultipleLogMessagesAppended) {
-  TestableLogger logger(test_dir);
-  logger.setMockDate("2025-01-01");
+  TEST_LOG.set_mock_date("2025-01-01");
 
-  logger.log(TRADES, INFO, "Dummy");
-  logger.log(TRADES, INFO, "Dummy2");
+  TEST_LOG.info(TRADES, "Dummy");
+  TEST_LOG.info(TRADES, "Dummy2");
 
   std::ifstream file(test_dir.string() + "/2025-01-01/trades.log");
   int count = 0;
@@ -150,8 +198,7 @@ TEST_F(LoggerTest, OldLogsDeleted) {
   createOldLogFile("2023-01-01", "orders.log", 730); // < 3 years
   createOldLogFile("2020-01-01", "trades.log", 1826); // Forever retention
 
-  TestableLogger logger(test_dir);
-  logger.setMockDate(base_date);
+  TEST_LOG.set_mock_date(base_date);
 
   // ASSERT - Old files deleted
   EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-12-20/debug.log"));
@@ -170,17 +217,89 @@ TEST_F(LoggerTest, OldLogsDeleted) {
 
 // Data Integrity
 
-TEST(LoggerTest, CorrectLogLevel) {}
+TEST_F(LoggerTest, InfoWithCorrectFormat) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  TEST_LOG.info(TRADES, "Test message");
 
-TEST(LoggerTest, CorrectMessage) {}
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
+  EXPECT_TRUE(content.find("Test message") != std::string::npos);
+}
 
-TEST(LoggerTest, CorrectTimestamp) {}
+TEST_F(LoggerTest, WarnWithCorrectFormat) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  TEST_LOG.warn(TRADES, "Test message");
+  
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[WARN]") != std::string::npos);
+  EXPECT_TRUE(content.find("Test message") != std::string::npos);
+}
 
-TEST(LoggerTest, EmptyMessage) {}
+TEST_F(LoggerTest, ErrorWithCorrectFormat) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  TEST_LOG.error(TRADES, "Test message");
 
-TEST(LoggerTest, VeryLongMessage) {}
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[ERROR]") != std::string::npos);
+  EXPECT_TRUE(content.find("Test message") != std::string::npos);
+}
 
-TEST(LoggerTest, SpecialCharacters) {}
+TEST_F(LoggerTest, DebugWithCorrectFormat) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  TEST_LOG.debug(TRADES, "Test message");
+
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[DEBUG]") != std::string::npos);
+  EXPECT_TRUE(content.find("Test message") != std::string::npos);
+}
+
+
+TEST_F(LoggerTest, EmptyMessage) {
+  TEST_LOG.set_mock_date("2025-01-01");
+    
+  TEST_LOG.info(TRADES, "");
+    
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
+}
+
+TEST_F(LoggerTest, VeryLongMessage) {
+  TEST_LOG.set_mock_date("2025-01-01");
+
+  std::string long_message(10000, 'A');
+  long_message += " END_MARKER";
+
+  TEST_LOG.info(TRADES, long_message);
+
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
+  EXPECT_TRUE(content.find("END_MARKER") != std::string::npos);
+}
+
+TEST_F(LoggerTest, SpecialCharacters) {
+  TEST_LOG.set_mock_date("2025-01-01");
+
+  std::string special_message = R"(@$#^)!()<,./*#(Q\123/123yo12uy3()83{}[])";
+  TEST_LOG.info(TRADES, special_message);
+
+  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+
+  EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
+  EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
+  EXPECT_TRUE(content.find("@$#^") != std::string::npos);  // Part of the message
+  EXPECT_TRUE(content.find("yo12uy3") != std::string::npos); // Another part
+}
 
 // Threading Behaviour
 

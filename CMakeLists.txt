@@ -21,6 +21,6 @@ add_executable(tests
         include/common/dummy.h
         include/logging/dummy2.h
         tests/logger_test.cpp
-        src/logger.cpp
+       # src/logger.cpp
 )
-target_link_libraries(tests GTest::gtest_main)
+target_link_libraries(tests GTest::gtest_main GTest::gmock_main)
