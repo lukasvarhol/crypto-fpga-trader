@@ -3,6 +3,6 @@
 
 int main() {
   Logger logger;
-  logger.line_getter("../logs.jsonl");
+  logger.log_data("type2", "data2", "message2");
 
 }
