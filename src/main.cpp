@@ -2,7 +2,7 @@
 
 
 int main() {
-  Logger logger;
-  logger.log("type2", "data2", "message2");
+  Logger logger("../logs/");
+  logger.log(info, "data2", "message2");
 
 }

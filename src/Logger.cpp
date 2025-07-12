@@ -4,18 +4,38 @@
 #include <string>
 #include <ctime>
 
-void Logger::log(std::string type, std::string data, std::string message) {
+Logger::Logger(const std::string& dir) {
+  directory = dir;
+}
+
+void Logger::log(TYPE type, std::string data, std::string message) {
   time_t timestamp; // seconds since 1970
+  time(&timestamp); //set current time
   struct tm* timeinfo = localtime(&timestamp);
   char filename[100];
   strftime(filename, sizeof(filename), "%Y-%m-%d.log", timeinfo);
-  std::ofstream myfile (type+"-"+filename, std::ios::app);
+  std::string enum_string = enum_to_string(type);
+  std::string file_path = directory+enum_string+"-"+filename;
+  std::ofstream myfile (file_path, std::ios::app);
   if (myfile.is_open()) {
-    myfile << type << "," << data << ","<< message <<"\n";
+    myfile << enum_string << "," << data << ","<< message <<"\n";
     myfile.close();
   }
   else {
     std::cout << "Unable to open file ";
+  }
+}
+
+std::string Logger::enum_to_string(TYPE type) {
+  switch (type) {
+    case info:
+      return "info";
+    case warning:
+      return "warning";
+    case error:
+      return "error";
+    default:
+      return "unknown";
   }
 }
 
