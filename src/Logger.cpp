@@ -1,11 +1,10 @@
 #include "../include/logging/Logger.h"
 #include <fstream>
 #include <iostream>
-//#include <json/json.h>
 #include <string>
 #include <ctime>
 
-void Logger::log_data(std::string type, std::string data, std::string message) {
+void Logger::log(std::string type, std::string data, std::string message) {
   time_t timestamp; // seconds since 1970
   struct tm* timeinfo = localtime(&timestamp);
   char filename[100];

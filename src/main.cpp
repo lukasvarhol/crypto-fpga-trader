@@ -3,6 +3,6 @@
 
 int main() {
   Logger logger;
-  logger.log_data("type2", "data2", "message2");
+  logger.log("type2", "data2", "message2");
 
 }

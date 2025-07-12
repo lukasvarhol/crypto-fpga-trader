@@ -5,7 +5,7 @@
 
 class Logger {
   public:
-  void log_data(std::string type, std::string data, std::string message);
+  void log(std::string type, std::string data, std::string message);
 };
 
 
