@@ -62,11 +62,14 @@ protected:
       file.close();
     }
 
-    auto now = std::filesystem::file_time_type::clock()::now();
-    auto old_time = now - std::chrono::system_clock::hours(24 * days_old);
+    auto now = std::filesystem::file_time_type::clock::now();
+    auto old_time = now - std::chrono::hours(24 * days_old);
     std::filesystem::last_write_time(file_path, old_time);
   }
 };
+// ==============================================================================
+// Tests
+// ==============================================================================
 
 // File Creation and Destruction
 
@@ -96,56 +99,78 @@ TEST_F(LoggerTest, CreatesNewDirectoryOnDateChange) {
   std::string day2 = "2025-01-02";
 
   logger.setMockDate(day1);
-  logger.log(TRADES, "Today is 2025-01-01");
+  logger.log(TRADES, INFO, "Today is 2025-01-01");
 
   logger.setMockDate(day2);
-  logger.log(TRADES, "Today is 2025-01-02");
+  logger.log(TRADES, INFO, "Today is 2025-01-02");
 
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2025-01-01/trades.log"));
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2025-01-02/trades.log"));
 }
 
-TEST(LoggerTest, SingleLogMessage) {}
+TEST_F(LoggerTest, SingleMessageCreatesLog) {
+  TestableLogger logger(test_dir);
+  logger.setMockDate("2025-01-01");
 
-TEST(LoggerTest, MultipleLogMessagesAppended) {}
+  logger.log(TRADES, INFO, "Dummy");
+  ASSERT_EQ(std::filesystem::exists(test_dir.string() + "/2025-01-01/dummy.log"), true);
+}
+
+TEST_F(LoggerTest, MultipleLogMessagesAppended) {
+  TestableLogger logger(test_dir);
+  logger.setMockDate("2025-01-01");
+
+  logger.log(TRADES, INFO, "Dummy");
+  logger.log(TRADES, INFO, "Dummy2");
+
+  std::ifstream file(test_dir.string() + "/2025-01-01/trades.log");
+  int count = 0;
+  std::string line;
+  while (std::getline(file, line)) {
+    count++;
+  }
+  file.close();
+
+  ASSERT_EQ(count, 2);
+}
 
 TEST_F(LoggerTest, OldLogsDeleted) {
   const std::string base_date = "2025-01-01";
 
   // Create old files that should be deleted
-  createOldLogFile("2024-12-20", "debug.log", 12);    // > 7 days
-  createOldLogFile("2024-10-01", "system.log", 92);   // > 90 days
+  createOldLogFile("2024-12-20", "debug.log", 12); // > 7 days
+  createOldLogFile("2024-10-01", "system.log", 92); // > 90 days
   createOldLogFile("2024-01-01", "signals.log", 365); // > 1 year
   createOldLogFile("2022-01-01", "orders.log", 1095); // > 3 years
 
   // Create recent files that should be kept
-  createOldLogFile("2024-12-28", "debug.log", 4);     // < 7 days
-  createOldLogFile("2024-11-01", "system.log", 61);   // < 90 days
+  createOldLogFile("2024-12-28", "debug.log", 4); // < 7 days
+  createOldLogFile("2024-11-01", "system.log", 61); // < 90 days
   createOldLogFile("2024-06-01", "signals.log", 214); // < 1 year
-  createOldLogFile("2023-01-01", "orders.log", 730);  // < 3 years
+  createOldLogFile("2023-01-01", "orders.log", 730); // < 3 years
   createOldLogFile("2020-01-01", "trades.log", 1826); // Forever retention
 
   TestableLogger logger(test_dir);
   logger.setMockDate(base_date);
 
   // ASSERT - Old files deleted
-  EXPECT_FALSE(std::filesystem::exists(test_dir.string()+"/2024-12-20/debug.log"));
-  EXPECT_FALSE(std::filesystem::exists(test_dir.string()+"/2024-10-01/system.log"));
-  EXPECT_FALSE(std::filesystem::exists(test_dir.string()+"/2024-01-01/signals.log"));
-  EXPECT_FALSE(std::filesystem::exists(test_dir.string()+"/2022-01-01/orders.log"));
+  EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-12-20/debug.log"));
+  EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-10-01/system.log"));
+  EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-01-01/signals.log"));
+  EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2022-01-01/orders.log"));
 
   // ASSERT - Recent files kept
-  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"/2024-12-28/debug.log"));
-  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"/2024-11-01/system.log"));
-  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"/2024-06-01/signals.log"));
-  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"/2023-01-01/orders.log"));
-  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"/2020-01-01/trades.log"));
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2024-12-28/debug.log"));
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2024-11-01/system.log"));
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2024-06-01/signals.log"));
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2023-01-01/orders.log"));
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2020-01-01/trades.log"));
 }
 
 
 // Data Integrity
 
-TEST(LoggerTest, CorrectStatusCode) {}
+TEST(LoggerTest, CorrectLogLevel) {}
 
 TEST(LoggerTest, CorrectMessage) {}
 
@@ -207,7 +232,6 @@ TEST(Logger, FileClosed) {}
 
 TEST(Logger, BackgroundThreadTerminated) {}
 
-TEST(Logger, OldLogsPurged) {}
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
