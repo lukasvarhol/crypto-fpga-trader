@@ -11,16 +11,27 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+include(FetchContent)
+FetchContent_Declare(
+        benchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG        v1.8.3
+)
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(benchmark)
+
 # Main executable
 add_executable(fpga_hft_engine src/main.cpp
         include/common/dummy.h
         include/logging/dummy2.h)
 
 # Test executable
-add_executable(tests
+add_executable(tests tests/TestLogger.cpp
         include/common/dummy.h
         include/logging/dummy2.h
-        tests/logger_test.cpp
-       # src/logger.cpp
+        # src/logger.cpp
 )
 target_link_libraries(tests GTest::gtest_main GTest::gmock_main)
+
+add_executable(benchmarks benchmarks/BenchmarkLogger.cpp)
+target_link_libraries(benchmarks benchmark::benchmark)

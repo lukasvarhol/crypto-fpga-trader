@@ -1,7 +1,7 @@
 //
 // Created by Lukas Varhol on 11/7/2025.
 //
-// #include "../include/logging/logger.h"
+#include "../include/logging/logger.h"
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -303,53 +303,43 @@ TEST_F(LoggerTest, SpecialCharacters) {
 
 // Threading Behaviour
 
-TEST(LoggerTest, NotOnMainThread) {}
+TEST_F(LoggerTest, NotOnMainThread) {}
 
-TEST(LoggerTest, ImmediateReturn) {}
+TEST_F(LoggerTest, ImmediateReturn) {}
 
-TEST(LoggerTest, MultipleLogCallsNonBlocking) {}
+TEST_F(LoggerTest, MultipleLogCallsNonBlocking) {}
 
-TEST(LoggerTest, RunAfterMainCrash) {}
-
-// Performance Impact
-
-TEST(LoggerTest, SameWorkWithAndWithoutLogging) {}
-
-TEST(Logger, MinimalLatency) {}
-
-TEST(Logger, HighFrequencyLoggingDoesNotAffectMain) {}
-
-TEST(Logger, MemoryUsageStable) {}
+TEST_F(LoggerTest, RunAfterMainCrash) {}
 
 // Queue/Buffer Behaviour
 
-TEST(LoggerTest, MessagesQueuedWithRapidLogging) {}
+TEST_F(LoggerTest, MessagesQueuedWithRapidLogging) {}
 
-TEST(LoggerTest, QueueEmptiesAsBackgroundThreadProcess) {}
+TEST_F(LoggerTest, QueueEmptiesAsBackgroundThreadProcess) {}
 
-TEST(LoggerTest, QueueHandlesOverflow) {}
+TEST_F(LoggerTest, QueueHandlesOverflow) {}
 
-TEST(LoggerTest, QueueSizeCanBeMonitored) {}
+TEST_F(LoggerTest, QueueSizeCanBeMonitored) {}
 
 // Error Handling
 
-TEST(LoggerTest, InvalidFilepath) {}
+TEST_F(LoggerTest, InvalidFilepath) {}
 
-TEST(LoggerTest, ReadOnlyFile) {}
+TEST_F(LoggerTest, ReadOnlyFile) {}
 
-TEST(LoggerTest, DiskFull) {}
+TEST_F(LoggerTest, DiskFull) {}
 
-TEST(LoggerTest, DirectoryDoeNotExist) {}
+TEST_F(LoggerTest, DirectoryDoesNotExist) {}
 
 // Resource Management
 
-TEST(LoggerTest, CleanUpOnDestruction) {}
+TEST_F(LoggerTest, CleanUpOnDestruction) {}
 
-TEST(Logger, MemoryLeakAfterHeavyUsage) {}
+TEST_F(LoggerTest, MemoryLeakAfterHeavyUsage) {}
 
-TEST(Logger, FileClosed) {}
+TEST_F(LoggerTest, FileClosed) {}
 
-TEST(Logger, BackgroundThreadTerminated) {}
+TEST_F(LoggerTest, BackgroundThreadTerminated) {}
 
 
 int main(int argc, char **argv) {
