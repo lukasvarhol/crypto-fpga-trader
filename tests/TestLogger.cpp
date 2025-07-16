@@ -1,13 +1,15 @@
 //
 // Created by Lukas Varhol on 11/7/2025.
 //
-#include "../include/logging/logger.h"
 #include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
 #include <string>
+#include <thread>
+#include "../include/logging/logger.h"
 
 // child logger class
 class TestableLogger : public Logger {
@@ -42,7 +44,7 @@ public:
   void reset_for_testing() {
     clear_mocks();
     clear_cache();
-    base_directory_.clear();
+    base_dir_.clear();
   }
 
 protected:
@@ -50,7 +52,7 @@ protected:
     if (!mock_date_.empty()) {
       return mock_date_;
     }
-    return Logger::getCurrentDate();
+    return Logger::get_current_date();
   }
 
 private:
@@ -94,7 +96,7 @@ protected:
     std::filesystem::last_write_time(file_path, old_time);
   }
 
-  std::string read_file_content(const std::string& relative_path) {
+  std::string read_file_content(const std::string &relative_path) {
     std::ifstream file(test_dir / relative_path);
     if (!file.is_open()) {
       return "";
@@ -105,7 +107,7 @@ protected:
     return buffer.str();
   }
 
-  std::vector<std::string> read_file_lines(const std::string& relative_path) {
+  std::vector<std::string> read_file_lines(const std::string &relative_path) {
     std::vector<std::string> lines;
     std::ifstream file(test_dir / relative_path);
 
@@ -221,8 +223,8 @@ TEST_F(LoggerTest, InfoWithCorrectFormat) {
   TEST_LOG.set_mock_date("2025-01-01");
   TEST_LOG.info(TRADES, "Test message");
 
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
-  
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
+
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
   EXPECT_TRUE(content.find("Test message") != std::string::npos);
@@ -231,9 +233,9 @@ TEST_F(LoggerTest, InfoWithCorrectFormat) {
 TEST_F(LoggerTest, WarnWithCorrectFormat) {
   TEST_LOG.set_mock_date("2025-01-01");
   TEST_LOG.warn(TRADES, "Test message");
-  
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
-  
+
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
+
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[WARN]") != std::string::npos);
   EXPECT_TRUE(content.find("Test message") != std::string::npos);
@@ -243,8 +245,8 @@ TEST_F(LoggerTest, ErrorWithCorrectFormat) {
   TEST_LOG.set_mock_date("2025-01-01");
   TEST_LOG.error(TRADES, "Test message");
 
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
-  
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
+
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[ERROR]") != std::string::npos);
   EXPECT_TRUE(content.find("Test message") != std::string::npos);
@@ -254,8 +256,8 @@ TEST_F(LoggerTest, DebugWithCorrectFormat) {
   TEST_LOG.set_mock_date("2025-01-01");
   TEST_LOG.debug(TRADES, "Test message");
 
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
-  
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
+
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[DEBUG]") != std::string::npos);
   EXPECT_TRUE(content.find("Test message") != std::string::npos);
@@ -264,11 +266,11 @@ TEST_F(LoggerTest, DebugWithCorrectFormat) {
 
 TEST_F(LoggerTest, EmptyMessage) {
   TEST_LOG.set_mock_date("2025-01-01");
-    
+
   TEST_LOG.info(TRADES, "");
-    
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
-  
+
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
+
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
 }
@@ -281,7 +283,7 @@ TEST_F(LoggerTest, VeryLongMessage) {
 
   TEST_LOG.info(TRADES, long_message);
 
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
   EXPECT_TRUE(content.find("END_MARKER") != std::string::npos);
@@ -293,53 +295,248 @@ TEST_F(LoggerTest, SpecialCharacters) {
   std::string special_message = R"(@$#^)!()<,./*#(Q\123/123yo12uy3()83{}[])";
   TEST_LOG.info(TRADES, special_message);
 
-  std::string content = read_file_content(test_dir.string()+"/2025-01-01/trades.log");
+  std::string content = read_file_content(test_dir.string() + "/2025-01-01/trades.log");
 
   EXPECT_TRUE(content.find("2025-01-01") != std::string::npos);
   EXPECT_TRUE(content.find("[INFO]") != std::string::npos);
-  EXPECT_TRUE(content.find("@$#^") != std::string::npos);  // Part of the message
+  EXPECT_TRUE(content.find("@$#^") != std::string::npos); // Part of the message
   EXPECT_TRUE(content.find("yo12uy3") != std::string::npos); // Another part
 }
 
 // Threading Behaviour
 
-TEST_F(LoggerTest, NotOnMainThread) {}
+TEST_F(LoggerTest, NotOnMainThread) {
+  TEST_LOG.set_mock_date("2025-01-01");
 
-TEST_F(LoggerTest, ImmediateReturn) {}
+  std::thread::id main_thread_id = std::this_thread::get_id();
+  std::thread::id logger_thread_id;
 
-TEST_F(LoggerTest, MultipleLogCallsNonBlocking) {}
+  TEST_LOG.info(TRADES, "Test message");
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  logger_thread_id =
+      TEST_LOG
+          .background_thread_id(); // TODO: create this method to access private member variable background_thread_id_.
 
-TEST_F(LoggerTest, RunAfterMainCrash) {}
+  EXPECT_NE(main_thread_id, logger_thread_id) << "Logger should run on a different thread";
+}
+
+TEST_F(LoggerTest, MultipleLogCallsNonBlocking) {
+  TEST_LOG.set_mock_date("2025-01-01");
+
+  std::atomic<int> completed_calls{0};
+  std::vector<std::chrono::milliseconds> call_durations;
+  const int NUM_THREADS = 4;
+  const int CALLS_PER_THREAD = 1000;
+
+  std::vector<std::thread> threads;
+  std::mutex duration_mutex;
+
+  for (int i = 0; i < NUM_THREADS; ++i) {
+    threads.emplace_back([&, i]() {
+      for (int j = 0; j < CALLS_PER_THREAD; ++j) {
+        auto start = std::chrono::high_resolution_clock::now();
+        TEST_LOG.info(TRADES, "Thread " + std::to_string(i) + " message " + std::to_string(j));
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+        {
+          std::lock_guard<std::mutex> lock(duration_mutex);
+          call_durations.push_back(duration);
+        }
+        completed_calls++;
+      }
+    });
+  }
+  for (auto &thread: threads) {
+    thread.join();
+  }
+
+  EXPECT_EQ(completed_calls.load(), NUM_THREADS * CALLS_PER_THREAD);
+  auto max_duration = *std::max_element(call_durations.begin(), call_durations.end());
+  EXPECT_LT(max_duration.count(), 1000) << "SOme log calls blocked for too long";
+}
+
+TEST_F(LoggerTest, RunAfterMainCrash) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  TEST_LOG.info(TRADES, "Before Crash");
+
+  try {
+    TEST_LOG.info(TRADES, "Durung crash simulation");
+    throw std::runtime_error("simulated crash");
+  } catch (const std::exception &) {
+  }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  EXPECT_NO_THROW(TEST_LOG.info(TRADES, "after crash"));
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2025-01-01/trades.log"));
+}
 
 // Queue/Buffer Behaviour
 
-TEST_F(LoggerTest, MessagesQueuedWithRapidLogging) {}
+TEST_F(LoggerTest, MessagesQueuedWithRapidLogging) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  const int RAPID_MESSAGES = 10000;
 
-TEST_F(LoggerTest, QueueEmptiesAsBackgroundThreadProcess) {}
+  auto start = std::chrono::high_resolution_clock::now();
+  for (int i = 0; i < RAPID_MESSAGES; ++i) {
+    TEST_LOG.info(TRADES, "Rapid message " + std::to_string(i));
+  }
+  auto end = std::chrono::high_resolution_clock::now();
 
-TEST_F(LoggerTest, QueueHandlesOverflow) {}
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  EXPECT_LT(duration.count(), 1000) << "Rapid messages blocked for too long";
 
-TEST_F(LoggerTest, QueueSizeCanBeMonitored) {}
+  size_t queue_size = TEST_LOG.queue_size(); // TODO: create this method to access private member variable
+  EXPECT_GT(queue_size, 0) << "Messsages should be queued during rapid logging";
 
-// Error Handling
+  std::cout << "Queue size: " << queue_size << std::endl;
+}
 
-TEST_F(LoggerTest, InvalidFilepath) {}
+TEST_F(LoggerTest, QueueEmptiesAsBackgroundThreadProcess) {
+  TEST_LOG.set_mock_date("2025-01-01");
 
-TEST_F(LoggerTest, ReadOnlyFile) {}
+  // fill queue with messages
+  for (int i = 0; i < 1000; i++) {
+    TEST_LOG.info(TRADES, "Queue test " + std::to_string(i));
+  }
 
-TEST_F(LoggerTest, DiskFull) {}
+  size_t initial_queue_size = TEST_LOG.queue_size();
+  EXPECT_GT(initial_queue_size, 0);
 
-TEST_F(LoggerTest, DirectoryDoesNotExist) {}
+  auto start_time = std::chrono::high_resolution_clock::now();
+  const auto timeout = std::chrono::seconds(5);
+
+  while (TEST_LOG.queue_size() > 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    auto elapsed = std::chrono::high_resolution_clock::now() - start_time;
+  }
+
+  EXPECT_EQ(TEST_LOG.queue_size(), 0);
+
+  auto lines = read_file_lines(test_dir.string() + "/2025-01-01/trades.log");
+  EXPECT_EQ(lines.size(), 1000);
+}
+
+TEST_F(LoggerTest, QueueHandlesOverflow) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  const int OVERFLOW_MESSAGES = 100000; // attempt to overwhelm queue
+
+  EXPECT_NO_THROW({
+    for (int i = 0; i < OVERFLOW_MESSAGES; ++i) {
+      TEST_LOG.info(TRADES, "Over flow test " + std::to_string(i));
+    }
+  });
+
+  EXPECT_NO_THROW(TEST_LOG.info(TRADES, "After overflow"));
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"2025-01-01/trades.log"));
+  auto lines = read_file_lines(test_dir.string()+"2025-01-01/trades.log");
+  EXPECT_GT(lines.size(), 1000);
+}
+
+TEST_F(LoggerTest, QueueSizeCanBeMonitored) {
+  TEST_LOG.set_mock_date("2025-01-01");
+  EXPECT_EQ(TEST_LOG.queue_size(), 0);
+
+  TEST_LOG.info(TRADES, "Message 1");
+  TEST_LOG.warn(TRADES, "Message 2");
+  TEST_LOG.error(TRADES, "Message 3");
+  TEST_LOG.debug(TRADES, "Message 4");
+
+  size_t queue_size_after_adding = TEST_LOG.queue_size();
+  EXPECT_GE(queue_size_after_adding, 0);
+  std::vector<size_t> queue_sizes;
+  for (int i = 0; i < 100; ++i) {
+    queue_sizes.push_back(TEST_LOG.queue_size());
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  EXPECT_NO_THROW(TEST_LOG.get_queue_size());
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  EXPECT_EQ(TEST_LOG.queue_size(), 0);
+}
+
 
 // Resource Management
 
-TEST_F(LoggerTest, CleanUpOnDestruction) {}
+TEST_F(LoggerTest, CleanUpOnDestruction) {
+  std::thread::id background_thread_id;
 
-TEST_F(LoggerTest, MemoryLeakAfterHeavyUsage) {}
+  {
+    TEST_LOG.set_mock_date("2025-01-01");
+    for (int i = 0; i < 1000; ++i) {
+      TEST_LOG.info(TRADES, "Clean up test " + std::to_string(i));
+    }
+    background_thread_id = TEST_LOG.background_thread_id();
+  }
 
-TEST_F(LoggerTest, FileClosed) {}
+  // logger should be destroyed here
 
-TEST_F(LoggerTest, BackgroundThreadTerminated) {}
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  EXPECT_TRUE(std::filesystem::exists(test_dir.string()+"2025-01-01/trades.log"));
+}
+
+TEST_F(LoggerTest, MemoryLeakAfterHeavyUsage) {
+  auto testLoggerCycle = [this]() {
+
+    TEST_LOG.setMockDate("2025-01-01");
+
+    for (int i = 0; i < 1000; ++i) {
+      TEST_LOG.info(TRADES, "Cycle test " + std::to_string(i));
+    }
+
+    // Give time for processing
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    // Logger destroyed when function exits
+  };
+
+  // Run many cycles - if there are memory leaks, this might cause issues
+  auto start = std::chrono::steady_clock::now();
+
+  for (int cycle = 0; cycle < 100; ++cycle) {
+    testLoggerCycle();
+  }
+
+  auto end = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+  // Should complete without hanging or crashing
+  EXPECT_LT(duration.count(), 30000) << "Test took too long - possible memory issues";
+
+  std::cout << "100 logger cycles completed in " << duration.count() << " ms" << std::endl;
+}
+
+
+TEST_F(LoggerTest, BackgroundThreadTerminated) {
+  std::thread::id background_thread_id;
+  bool thread_was_running = false;
+
+  {
+    TEST_LOG.setMockDate("2025-01-01");
+
+    TEST_LOG.info(TRADES, "Thread test");
+
+    // Give time for thread to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    if (TEST_LOG.has_background_thread()) { // TODO: implement this function in Logger class
+      background_thread_id = TEST_LOG.background_thread_id();
+      thread_was_running = true;
+    }
+
+    // Logger destroyed here
+  }
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+  EXPECT_TRUE(thread_was_running); // Verify thread was actually running
+}
 
 
 int main(int argc, char **argv) {
