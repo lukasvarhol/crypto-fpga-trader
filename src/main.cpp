@@ -2,7 +2,6 @@
 
 
 int main() {
-  Logger logger("../logs/");
+  Logger& logger = Logger::getInstance("../logs/");
   logger.log(info, "data2", "message2");
-
 }

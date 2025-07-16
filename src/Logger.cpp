@@ -26,6 +26,11 @@ void Logger::log(TYPE type, std::string data, std::string message) {
   }
 }
 
+Logger& Logger::getInstance(const std::string& dir) {
+  static Logger instance(dir);
+  return instance;
+}
+
 std::string Logger::enum_to_string(TYPE type) {
   switch (type) {
     case info:
