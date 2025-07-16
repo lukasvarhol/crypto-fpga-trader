@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <numeric>
 #include "../include/logging/logger.h"
 
 // child logger class
@@ -127,7 +128,7 @@ protected:
 // Tests
 // ==============================================================================
 
-// File Creation and Destruction
+// FILE CREATION & DESTRUCTION
 
 TEST_F(LoggerTest, FilesCreatedOnStart) {
   std::string date = "2025-01-01";
@@ -202,13 +203,11 @@ TEST_F(LoggerTest, OldLogsDeleted) {
 
   TEST_LOG.set_mock_date(base_date);
 
-  // ASSERT - Old files deleted
   EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-12-20/debug.log"));
   EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-10-01/system.log"));
   EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2024-01-01/signals.log"));
   EXPECT_FALSE(std::filesystem::exists(test_dir.string() + "/2022-01-01/orders.log"));
 
-  // ASSERT - Recent files kept
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2024-12-28/debug.log"));
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2024-11-01/system.log"));
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2024-06-01/signals.log"));
@@ -217,7 +216,7 @@ TEST_F(LoggerTest, OldLogsDeleted) {
 }
 
 
-// Data Integrity
+// DATA INTEGRITY
 
 TEST_F(LoggerTest, InfoWithCorrectFormat) {
   TEST_LOG.set_mock_date("2025-01-01");
@@ -303,7 +302,7 @@ TEST_F(LoggerTest, SpecialCharacters) {
   EXPECT_TRUE(content.find("yo12uy3") != std::string::npos); // Another part
 }
 
-// Threading Behaviour
+// THREADNG BEHAVIOUR
 
 TEST_F(LoggerTest, NotOnMainThread) {
   TEST_LOG.set_mock_date("2025-01-01");
@@ -372,7 +371,7 @@ TEST_F(LoggerTest, RunAfterMainCrash) {
   EXPECT_TRUE(std::filesystem::exists(test_dir.string() + "/2025-01-01/trades.log"));
 }
 
-// Queue/Buffer Behaviour
+// QUEUE/BUFFER BEHAVIOUR
 
 TEST_F(LoggerTest, MessagesQueuedWithRapidLogging) {
   TEST_LOG.set_mock_date("2025-01-01");
@@ -462,7 +461,7 @@ TEST_F(LoggerTest, QueueSizeCanBeMonitored) {
 }
 
 
-// Resource Management
+// RESOURCE MANAGEMENT
 
 TEST_F(LoggerTest, CleanUpOnDestruction) {
   std::thread::id background_thread_id;
@@ -537,6 +536,39 @@ TEST_F(LoggerTest, BackgroundThreadTerminated) {
 
   EXPECT_TRUE(thread_was_running); // Verify thread was actually running
 }
+
+// CACHING BEHAVIOUR
+
+TEST_F(LoggerTest, DateCalculatedOnlyOncePerDay) {
+  // Start with no mock date to use real date calculation
+  TEST_LOG.clear_mocks();
+
+  const int NUM_MESSAGES = 100;
+  std::vector<std::chrono::microseconds> call_times;
+
+  for (int i = 0; i < NUM_MESSAGES; ++i) {
+    auto start = std::chrono::high_resolution_clock::now();
+    TEST_LOG.info(TRADES, "Message " + std::to_string(i));
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    call_times.push_back(duration);
+  }
+
+  // First call should be slower (date calculation + cache population)
+  // Subsequent calls should be faster (using cached date)
+  auto first_call_time = call_times[0];
+  auto avg_subsequent_time = std::accumulate(call_times.begin() + 10, call_times.end(),
+                                           std::chrono::microseconds(0)) / (call_times.size() - 10);
+
+  // Later calls should generally be faster due to caching
+  EXPECT_LT(avg_subsequent_time.count(), first_call_time.count() * 1.5)
+    << "Subsequent calls should be faster due to date caching";
+
+  std::cout << "First call: " << first_call_time.count() << "μs, "
+            << "Avg subsequent: " << avg_subsequent_time.count() << "μs" << std::endl;
+}
+
 
 
 int main(int argc, char **argv) {
