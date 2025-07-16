@@ -12,7 +12,7 @@
 // child logger class
 class TestableLogger : public Logger {
 public:
-  static TestableLogger &getInstance() {
+  static TestableLogger &get_instance() {
     static TestableLogger instance;
     return instance;
   }
@@ -29,7 +29,7 @@ public:
   }
 
   void clear_mocks() {
-    mock_date_ = date;
+    mock_date_.clear();
     clear_cache();
   }
 
@@ -58,7 +58,7 @@ private:
   std::string mock_date_;
 };
 
-#define TEST_LOG TestableLogger::getInstance()
+#define TEST_LOG TestableLogger::get_instance()
 
 
 // test fixture
@@ -78,7 +78,7 @@ protected:
     std::filesystem::remove_all(test_dir);
   }
 
-  void createOldLogFile(const std::string &date_dir, const std::string &file_name, int days_old) {
+  void create_old_log_file(const std::string &date_dir, const std::string &file_name, int days_old) {
     std::filesystem::path file_path = test_dir / date_dir / file_name;
     std::filesystem::create_directory(file_path.parent_path());
     std::ofstream file(file_path.string());
@@ -186,17 +186,17 @@ TEST_F(LoggerTest, OldLogsDeleted) {
   const std::string base_date = "2025-01-01";
 
   // Create old files that should be deleted
-  createOldLogFile("2024-12-20", "debug.log", 12); // > 7 days
-  createOldLogFile("2024-10-01", "system.log", 92); // > 90 days
-  createOldLogFile("2024-01-01", "signals.log", 365); // > 1 year
-  createOldLogFile("2022-01-01", "orders.log", 1095); // > 3 years
+  create_old_log_file("2024-12-20", "debug.log", 12); // > 7 days
+  create_old_log_file("2024-10-01", "system.log", 92); // > 90 days
+  create_old_log_file("2024-01-01", "signals.log", 365); // > 1 year
+  create_old_log_file("2022-01-01", "orders.log", 1095); // > 3 years
 
   // Create recent files that should be kept
-  createOldLogFile("2024-12-28", "debug.log", 4); // < 7 days
-  createOldLogFile("2024-11-01", "system.log", 61); // < 90 days
-  createOldLogFile("2024-06-01", "signals.log", 214); // < 1 year
-  createOldLogFile("2023-01-01", "orders.log", 730); // < 3 years
-  createOldLogFile("2020-01-01", "trades.log", 1826); // Forever retention
+  create_old_log_file("2024-12-28", "debug.log", 4); // < 7 days
+  create_old_log_file("2024-11-01", "system.log", 61); // < 90 days
+  create_old_log_file("2024-06-01", "signals.log", 214); // < 1 year
+  create_old_log_file("2023-01-01", "orders.log", 730); // < 3 years
+  create_old_log_file("2020-01-01", "trades.log", 1826); // Forever retention
 
   TEST_LOG.set_mock_date(base_date);
 
