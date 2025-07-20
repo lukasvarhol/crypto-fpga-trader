@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 3.31)
 project(fpga_hft_engine)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+# Use Release build by default
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
 # Platform-specific compiler flags
 if(MSVC)
@@ -12,25 +16,17 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native -mtune=native")
 endif()
 
-# Fetch all dependencies via FetchContent (no system dependencies)
 include(FetchContent)
 
-# Fetch GoogleTest
+# Try the latest GoogleTest version with better C++20 support
 FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG        v1.14.0
+        GIT_TAG        v1.15.2  # Latest version as of 2024
 )
-FetchContent_MakeAvailable(googletest)
 
-# Fetch Google Benchmark
-FetchContent_Declare(
-        benchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG        v1.8.3
-)
-set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(benchmark)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
 # Fetch nlohmann/json
 FetchContent_Declare(
@@ -38,29 +34,21 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/nlohmann/json.git
         GIT_TAG        v3.11.3
 )
-set(JSON_BuildTests OFF CACHE INTERNAL "")  # Don't build json tests
-set(JSON_Install OFF CACHE INTERNAL "")     # Don't install json
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
 FetchContent_MakeAvailable(nlohmann_json)
 
-# Force ARM64 OpenSSL path on macOS and ignore Intel version
+# Force ARM64 OpenSSL path on macOS
 if(APPLE)
     set(OPENSSL_ROOT_DIR "/opt/homebrew")
     set(OPENSSL_INCLUDE_DIR "/opt/homebrew/include")
     set(OPENSSL_CRYPTO_LIBRARY "/opt/homebrew/lib/libcrypto.dylib")
     set(OPENSSL_SSL_LIBRARY "/opt/homebrew/lib/libssl.dylib")
     set(CMAKE_PREFIX_PATH "/opt/homebrew" ${CMAKE_PREFIX_PATH})
-
-    # Explicitly ignore Intel OpenSSL
     set(CMAKE_IGNORE_PATH "/usr/local/opt/openssl")
 endif()
 
 find_package(OpenSSL REQUIRED)
-
-# Verify we found the right OpenSSL
-if(APPLE AND OPENSSL_FOUND)
-    message(STATUS "OpenSSL SSL library: ${OPENSSL_SSL_LIBRARY}")
-    message(STATUS "OpenSSL Crypto library: ${OPENSSL_CRYPTO_LIBRARY}")
-endif()
 
 # Fetch IXWebSocket
 FetchContent_Declare(
@@ -86,27 +74,30 @@ target_link_libraries(crypto_fpga_trader
 )
 
 # Test executable
-add_executable(tests tests/TestLogger.cpp
+add_executable(tests
         include/common/dummy.h
-        include/logging/dummy2.h)
+        include/logging/dummy2.h
+        src/client/BinanceClient.cpp
+        tests/TestBinanceClient.cpp
+)
 
+target_include_directories(tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+)
+
+# Try the simple linking approach that worked in your original
 target_link_libraries(tests
+        ixwebsocket
+        nlohmann_json::nlohmann_json
         GTest::gtest_main
         GTest::gmock_main
-        nlohmann_json::nlohmann_json
 )
 
-# Benchmarks executable
-add_executable(benchmark_runner benchmarks/BenchmarkLogger.cpp)
-target_link_libraries(benchmark_runner
-        benchmark::benchmark
-        nlohmann_json::nlohmann_json
-)
-
-# Add custom target to build and run benchmarks in one command
-add_custom_target(run_benchmarks
-        COMMAND benchmark_runner
-        DEPENDS benchmark_runner
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Building and running benchmarks..."
-)
+# Add macOS frameworks
+if(APPLE)
+    target_link_libraries(tests
+            "-framework Security"
+            "-framework Foundation"
+    )
+endif()

@@ -8,7 +8,7 @@ int main() {
 
   BinanceClient client;
 
-  client.setup_websocket();
+  client.setup_websocket("wss://stream.binance.com:9443/ws/websocket");
 
   client.connect();
 

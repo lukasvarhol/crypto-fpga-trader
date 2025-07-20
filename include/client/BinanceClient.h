@@ -22,12 +22,12 @@ public:
   BinanceClient(const BinanceClient&) = delete;
   BinanceClient& operator=(const BinanceClient&) = delete;
 
-  void setup_websocket();
+  void setup_websocket(const std::string& url);
   void connect();
   void disconnect();
   void subscribe_to_streams(const std::vector<std::string>& streams);
   void unsubscribe_from_streams(const std::vector<std::string>& streams);
-  bool is_connected() const;
+  [[nodiscard]] bool is_connected() const;
 };
 
 #endif //BINANCECLIENT_H

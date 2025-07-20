@@ -31,9 +31,8 @@ public:
   void handle_ticker(const json &msg);
   void handle_trade(const json &msg);
 
-  void setup_websocket() {
+  void setup_websocket(const std::string& url) {
     ix::initNetSystem();
-    std::string url("wss://stream.binance.com:9443/ws/websocket");
     std::cout << "Setting up WebSocket connection to: " << url << std::endl;
     web_socket->setUrl(url);
     web_socket->setHandshakeTimeout(10);
@@ -46,7 +45,7 @@ BinanceClient::BinanceClient() : pImpl(std::make_unique<Impl>()) {}
 
 BinanceClient::~BinanceClient() = default;
 
-void BinanceClient::setup_websocket() { pImpl->setup_websocket(); }
+void BinanceClient::setup_websocket(const std::string& url) { pImpl->setup_websocket(url); }
 
 void BinanceClient::connect() {
   std::cout << "Calling web_socket->start()..." << std::endl;
