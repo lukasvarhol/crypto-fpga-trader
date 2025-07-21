@@ -4,21 +4,21 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "../common/CoinManager.h"
 
 class BinanceClient {
 private:
-  class Impl;  // Forward declaration of implementation
+  class Impl;
   std::unique_ptr<Impl> pImpl;  // Pointer to implementation
+  CoinManager& coin_manager_;
 
 public:
-  BinanceClient();
+  explicit BinanceClient(CoinManager& manager);
   ~BinanceClient();
 
-  // Move constructor/assignment for unique_ptr
   BinanceClient(BinanceClient&&) = default;
-  BinanceClient& operator=(BinanceClient&&) = default;
+  BinanceClient& operator=(BinanceClient&&) = delete;
 
-  // Delete copy operations (or implement if needed)
   BinanceClient(const BinanceClient&) = delete;
   BinanceClient& operator=(const BinanceClient&) = delete;
 

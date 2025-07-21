@@ -3,6 +3,7 @@
 //
 
 #include "../../include/client/BinanceClient.h"
+#include "../../include/common/Coin.h"
 #include <iostream>
 #include <ixwebsocket/IXNetSystem.h>
 #include <ixwebsocket/IXWebSocket.h>
@@ -16,8 +17,9 @@ public:
   std::unique_ptr<ix::WebSocket> web_socket;
   long long message_id = 0;
   bool is_connected = false;
+  CoinManager& coin_manager_;
 
-  Impl() : web_socket(std::make_unique<ix::WebSocket>()) {}
+  Impl(CoinManager& manager) : web_socket(std::make_unique<ix::WebSocket>()), coin_manager_(manager) {}
   ~Impl() {
     if (web_socket) {
       web_socket->stop();
@@ -41,7 +43,7 @@ public:
   }
 };
 
-BinanceClient::BinanceClient() : pImpl(std::make_unique<Impl>()) {}
+BinanceClient::BinanceClient(CoinManager &manager) : pImpl(std::make_unique<Impl>(manager)), coin_manager_(manager) {}
 
 BinanceClient::~BinanceClient() = default;
 
@@ -56,6 +58,11 @@ void BinanceClient::connect() {
 void BinanceClient::disconnect() { pImpl->web_socket->stop(); }
 
 void BinanceClient::subscribe_to_streams(const std::vector<std::string> &subscribe_streams) {
+  std::cout << "subscribing to streams: ";
+  for (int i = 0; i < subscribe_streams.size(); i++) {
+    std::cout << subscribe_streams[i] << " ";
+  }
+  std::cout << std::endl;
   json subscribe_msg = {{"method", "SUBSCRIBE"}, {"params", subscribe_streams}, {"id", ++pImpl->message_id}};
 
   pImpl->send_message(subscribe_msg.dump());
@@ -158,19 +165,49 @@ void BinanceClient::Impl::handle_trade(const json &msg) {
     return;
     }
 
-  std::string symbol = msg["s"];
-  long trade_id = msg["t"];
-  std::string price = msg["p"];
-  std::string quantity = msg["q"];
-  long trade_time = msg["T"];
-  bool is_market_maker = msg["m"];
+  CoinData data;
+  std::string symbol = msg["s"].get<std::string>();
+  std::transform(symbol.begin(),symbol.end(), symbol.begin(), ::tolower);
+  data.symbol = symbol;
+  data.trade_id = msg["t"].get<long>();
+  data.price = std::stod(msg["p"].get<std::string>());           // String -> double
+  data.trade_quantity = std::stod(msg["q"].get<std::string>());  // String -> double
+  data.trade_time = msg["T"].get<long>();
 
-  std::cout << "\n" << symbol << " TRADE" << std::endl;
-  std::cout << "Symbol: " << symbol << std::endl;
-  std::cout << "Price: $" << price << std::endl;
-  std::cout << "Trade ID: " << trade_id << std::endl;
-  std::cout << "Quantity: " << quantity << std::endl;
-  std::cout << "Trade Time: " << trade_time << std::endl;
-  std::cout << "Buyer is Market Maker: " << is_market_maker << std::endl;
+  coin_manager_.update_coin_data(data);
+
+  // long trade_id = msg["t"];
+  // std::string price = msg["p"];
+  // std::string quantity = msg["q"];
+  // long trade_time = msg["T"];
+  // bool is_market_maker = msg["m"];
+
+  // std::cout << "\n" << symbol << " TRADE" << std::endl;
+  // std::cout << "Symbol: " << symbol << std::endl;
+  // std::cout << "Price: $" << price << std::endl;
+  // std::cout << "Trade ID: " << trade_id << std::endl;
+  // std::cout << "Quantity: " << quantity << std::endl;
+  // std::cout << "Trade Time: " << trade_time << std::endl;
+  // std::cout << "Buyer is Market Maker: " << is_market_maker << std::endl;
 }
+
+//TODO: separation of concerts: move this function to a visualiser file
+// void display_prices() {
+//   std::cout << "\033[H\033[2J";
+//
+//   std::cout << "=== Live Crypto Tracker ===";
+//   std::cout << std::left << std::setw(8) << "Symbol"
+//             << std::setw(15) << "Price (USD)"
+//             << std::setw(12) << "Change %"
+//             << "Last Update" << std::endl;
+//   std::cout << std::string(55, '-') << std::endl;
+//
+//   for (const auto& [symbol, data] : coins) {
+//     std::cout << std::left << std::setw(8) << symbol
+//               << std::setw(15) << format_price(data.current_price)
+//               << std::setw(12) << format_change(data.get_change())
+//               << data.lastUpdate << std::endl;
+//   }
+//   std::cout << std::flush;
+// }
 

@@ -1,23 +1,28 @@
 
-#include <iostream>
-#include "../include/client/BinanceClient.h"
-#include <thread>
 #include <chrono>
+#include <iostream>
+#include <thread>
+#include "../include/client/BinanceClient.h"
+
+#include "../include/common/CoinManager.h"
 
 int main() {
 
-  BinanceClient client;
+  CoinManager coin_manager;
 
-  client.setup_websocket("wss://stream.binance.com:9443/ws/websocket");
+  BinanceClient binance_client(coin_manager);
+  coin_manager.set_binance_client(&binance_client);
 
-  client.connect();
+  binance_client.setup_websocket("wss://stream.binance.com:9443/ws/websocket");
+
+  binance_client.connect();
 
   bool connected = false;
   int max_wait = 15;
   for (int i = 1; i <= max_wait; ++i) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    if (client.is_connected()) {
+    if (binance_client.is_connected()) {
       std::cout << "Connected after " << i << " seconds" << std::endl;
       connected = true;
       break;
@@ -27,18 +32,15 @@ int main() {
 
   if (connected) {
     std::cout << "Subscribing to streams..." << std::endl;
-    std::vector<std::string> streams = {
-      "btcusdt@ticker",
-      "btcusdt@trade"
-  };
-    client.subscribe_to_streams(streams);
+    std::vector<std::string> symbols = {"btcusdt", "ethusdt", "solusdt" };
+    coin_manager.add_coins(symbols);
 
     std::cout << "Listening for 30 seconds..." << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(30));
   } else {
-    std::cout << "Failed to connect within "<< max_wait << " seconds." << std::endl;
+    std::cout << "Failed to connect within " << max_wait << " seconds." << std::endl;
   }
 
-  client.disconnect();
+  binance_client.disconnect();
   return 0;
 }
