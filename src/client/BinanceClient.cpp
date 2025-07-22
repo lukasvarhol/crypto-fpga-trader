@@ -3,12 +3,14 @@
 //
 
 #include "../../include/client/BinanceClient.h"
-#include "../../include/common/Coin.h"
 #include <iostream>
 #include <ixwebsocket/IXNetSystem.h>
 #include <ixwebsocket/IXWebSocket.h>
 #include <nlohmann/json.hpp>
 #include <string>
+#include "../../include/common/Coin.h"
+
+#include "../../include/common/Visualizer.h"
 
 using json = nlohmann::json;
 
@@ -118,7 +120,7 @@ void BinanceClient::Impl::parse_raw_message(const std::string &raw_message) {
 // TODO: once logger is setup convert prints to logs
 void BinanceClient::Impl::handle_message(const ix::WebSocketMessagePtr& msg) {
   if (msg->type == ix::WebSocketMessageType::Message) {
-    std::cout << "received message: " << msg->str << std::endl;
+    // std::cout << "received message: " << msg->str << std::endl;
     parse_raw_message(msg->str);
   } else if (msg->type == ix::WebSocketMessageType::Open) {
     std::cout << "Connection established." << std::endl;
@@ -130,7 +132,7 @@ void BinanceClient::Impl::handle_message(const ix::WebSocketMessagePtr& msg) {
     std::cout << "WebSocket message error." << msg->errorInfo.reason << std::endl;
     is_connected = false;
   } else if (msg->type == ix::WebSocketMessageType::Ping) {
-    std::cout << "Ping received." << std::endl;
+    // std::cout << "Ping received." << std::endl;
   }
 }
 
@@ -175,39 +177,8 @@ void BinanceClient::Impl::handle_trade(const json &msg) {
   data.trade_time = msg["T"].get<long>();
 
   coin_manager_.update_coin_data(data);
-
-  // long trade_id = msg["t"];
-  // std::string price = msg["p"];
-  // std::string quantity = msg["q"];
-  // long trade_time = msg["T"];
-  // bool is_market_maker = msg["m"];
-
-  // std::cout << "\n" << symbol << " TRADE" << std::endl;
-  // std::cout << "Symbol: " << symbol << std::endl;
-  // std::cout << "Price: $" << price << std::endl;
-  // std::cout << "Trade ID: " << trade_id << std::endl;
-  // std::cout << "Quantity: " << quantity << std::endl;
-  // std::cout << "Trade Time: " << trade_time << std::endl;
-  // std::cout << "Buyer is Market Maker: " << is_market_maker << std::endl;
+  display_prices(coin_manager_);
 }
 
-//TODO: separation of concerts: move this function to a visualiser file
-// void display_prices() {
-//   std::cout << "\033[H\033[2J";
-//
-//   std::cout << "=== Live Crypto Tracker ===";
-//   std::cout << std::left << std::setw(8) << "Symbol"
-//             << std::setw(15) << "Price (USD)"
-//             << std::setw(12) << "Change %"
-//             << "Last Update" << std::endl;
-//   std::cout << std::string(55, '-') << std::endl;
-//
-//   for (const auto& [symbol, data] : coins) {
-//     std::cout << std::left << std::setw(8) << symbol
-//               << std::setw(15) << format_price(data.current_price)
-//               << std::setw(12) << format_change(data.get_change())
-//               << data.lastUpdate << std::endl;
-//   }
-//   std::cout << std::flush;
-// }
+
 

@@ -84,7 +84,7 @@ void CoinManager::update_coin_data(CoinData &data) {
   std::cout << "Received data for unknown coin: " << data.symbol << std::endl;
 }
 
-std::vector<std::string> CoinManager::all_coins() const{
+std::vector<std::string> CoinManager::all_coin_symbols() const{
   std::vector<std::string> symbols;
   symbols.reserve(coins_.size());
 
@@ -92,6 +92,17 @@ std::vector<std::string> CoinManager::all_coins() const{
     symbols.push_back(pair.first);
   }
   return symbols;
+}
+
+
+std::vector<Coin*> CoinManager::all_coins() const {
+  std::vector<Coin*> coins;
+  coins.reserve(coins_.size());
+
+  for (const auto& pair : coins_) {
+    coins.push_back(pair.second.get());
+  }
+  return coins;
 }
 
 

@@ -22,7 +22,8 @@ public:
   void add_coins(const std::vector<std::string>& symbols);
   void remove_coins(const std::vector<std::string>& symbols);
   void update_coin_data(CoinData &data);
-  std::vector<std::string> all_coins() const;
+  std::vector<std::string> all_coin_symbols() const;
+  std::vector<Coin*> all_coins() const;
   bool has_coin(const std::string& symbol) const;
 };
 
