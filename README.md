@@ -19,7 +19,7 @@
 **Week 2: Track Multiple Cryptocurrencies**
 - Subscribe to multiple coin streams (BTC, ETH, SOL)
 - Store prices in data structures
+- Display multi-coin price tracker
 - Learn: C++ containers, data management
 
 #### *TODO:*
-- Display multi-coin price tracker
