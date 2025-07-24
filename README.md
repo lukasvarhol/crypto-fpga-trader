@@ -22,4 +22,14 @@
 - Display multi-coin price tracker
 - Learn: C++ containers, data management
 
+#### *In Progress:*
+- Unit Tests for multi-coin trackign functionality and visualization
+- Build Logger for saving status messages
+
 #### *TODO:*
+**Week 3: Price History and Analysis**
+- Store historical price data
+- Calculate percentage changes
+- Save data to CSV files
+- Learn: File I/O, basic statistics
+
