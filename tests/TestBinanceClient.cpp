@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include "../include/client/BinanceClient.h"
+#include "../include/common/CoinManager.h"
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -14,7 +15,8 @@ using json = nlohmann::json;
 class BinanceClientTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    client = std::make_unique<BinanceClient>();
+    coinManager = std::make_unique<CoinManager>();
+    client = std::make_unique<BinanceClient>(*coinManager);
   }
 
   void TearDown() override {
@@ -25,7 +27,7 @@ protected:
       client.reset();
     }
   }
-
+  std::unique_ptr<CoinManager> coinManager;
   std::unique_ptr<BinanceClient> client;
 
   bool wait_for_connection(int timeout_seconds = 10) {
@@ -219,9 +221,4 @@ TEST_F(BinanceClientTest, DifferentEndpoints) {
   if (connected2) {
     client->disconnect();
   }
-}
-
-int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
 }

@@ -82,7 +82,11 @@ target_link_libraries(crypto_fpga_trader
 add_executable(tests
         include/logging/dummy2.h
         src/client/BinanceClient.cpp
+        src/CoinManager.cpp              # Add this
+        src/Coin.cpp                     # Add this
+        src/Visualizer.cpp               # Add this
         tests/TestBinanceClient.cpp
+        tests/TestCoinManager.cpp
 )
 
 target_include_directories(tests PRIVATE
