@@ -30,3 +30,9 @@ TEST_F(CoinManagerTest, UpdateCoinNoCoinsAdded) {
   EXPECT_FALSE(manager->has_coin("test"));
   EXPECT_TRUE(manager->all_coins().empty());
 }
+
+TEST_F(CoinManagerTest, RemoveCoinNoCoinsAdded) {
+  std::vector<std::string> coins = {"test"};
+  EXPECT_NO_THROW(manager->remove_coins(coins));
+  EXPECT_TRUE(manager->all_coins().empty());
+}
