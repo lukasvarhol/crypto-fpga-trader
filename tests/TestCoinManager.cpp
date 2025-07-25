@@ -36,3 +36,15 @@ TEST_F(CoinManagerTest, RemoveCoinNoCoinsAdded) {
   EXPECT_NO_THROW(manager->remove_coins(coins));
   EXPECT_TRUE(manager->all_coins().empty());
 }
+
+TEST_F(CoinManagerTest, AddOneCoin) {
+  std::vector<std::string> coins = {"test"};
+  EXPECT_NO_THROW(manager->add_coins(coins));
+  EXPECT_TRUE(manager->has_coin("test"));
+}
+
+TEST_F(CoinManagerTest, AddMultipleCoins) {
+  std::vector<std::string> coins = {"test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9"};
+  EXPECT_NO_THROW(manager->add_coins(coins));
+  EXPECT_TRUE(manager->all_coins().size() == 9);
+}
