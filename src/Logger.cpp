@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <ctime>
+#include <filesystem>
 
 
 void Logger::log(TYPE type, std::string data, std::string message) {
@@ -10,11 +11,16 @@ void Logger::log(TYPE type, std::string data, std::string message) {
   time(&timestamp); //set current time
   struct tm* timeinfo = localtime(&timestamp);
 
-  char filename[100];
-  strftime(filename, sizeof(filename), "%Y-%m-%d.log", timeinfo);
+  char fileDate[20];
+  strftime(fileDate, sizeof(fileDate), "%Y-%m-%d", timeinfo);
+  std::string dateDir = directory + fileDate + "/";
 
+  if (!std::filesystem::exists(dateDir)) {
+    std::filesystem::create_directory(dateDir);
+  }
   std::string enum_string = enum_to_string(type);
-  std::string file_path = directory + enum_string+"-"+filename;
+  std::string filename = enum_string + ".log";
+  std::string file_path = dateDir + filename;
   std::ofstream myfile (file_path, std::ios::app);
 
   if (myfile.is_open()) {

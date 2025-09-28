@@ -2,6 +2,6 @@
 
 int main() {
   Logger& logger = Logger::getInstance();
-  logger.log(warning, "data3", "message3");
+  logger.log(warning, "data666", "message3");
   return 0;
 }
