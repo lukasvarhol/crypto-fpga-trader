@@ -5,13 +5,11 @@
 #include "../include/client/BinanceClient.h"
 
 #include "../include/common/CoinManager.h"
-
 #include "../include/logging/Logger.h"
 
 int main() {
   Logger& logger = Logger::getInstance();
   logger.log(warning, "data666", "message3");
-
   CoinManager coin_manager;
 
   BinanceClient binance_client(coin_manager);
@@ -44,8 +42,6 @@ int main() {
   } else {
     std::cout << "Failed to connect within " << max_wait << " seconds." << std::endl;
   }
-
-  binance_client.disconnect();
 
   return 0;
 }
