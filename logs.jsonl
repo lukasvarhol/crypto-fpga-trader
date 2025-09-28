@@ -1,0 +1,6 @@
+{"timestamp": "2025-07-11T14:30:00Z", "level": "INFO", "module": "fpga_interface", "message": "FPGA initialized successfully.", "data": {"temperature": 42.5, "voltage": 3.3, "status": "OK"}}
+{"timestamp": "2025-07-11T14:31:05Z", "level": "WARNING", "module": "sensor_monitor", "message": "Temperature approaching threshold.", "data": {"temperature": 78.2, "voltage": 3.1, "status": "WARN"}}
+{"timestamp": "2025-07-11T14:32:12Z", "level": "ERROR", "module": "fpga_comm", "message": "Communication timeout with FPGA.", "data": {"error_code": 504, "retry_count": 3, "status": "FAIL"}}
+{"timestamp": "2025-07-11T14:33:25Z", "level": "INFO", "module": "fpga_interface", "message": "Data packet sent successfully.", "data": {"temperature": 50.0, "voltage": 3.2, "status": "OK"}}
+{"timestamp": "2025-07-11T14:34:47Z", "level": "WARNING", "module": "power_monitor", "message": "Voltage dropped below threshold.", "data": {"temperature": 55.0, "voltage": 2.8, "status": "WARN"}}
+{"timestamp": "2025-07-11T14:35:58Z", "level": "ERROR", "module": "sensor_monitor", "message": "Sensor failure detected.", "data": {"error_code": 101, "retry_count": 1, "status": "FAIL"}}

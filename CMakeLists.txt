@@ -67,6 +67,7 @@ add_executable(crypto_fpga_trader src/main.cpp
         src/client/BinanceClient.cpp
         include/client/BinanceClient.h
         src/Coin.cpp
+        src/Logger.cpp
         include/common/Coin.h
         src/CoinManager.cpp
         include/common/CoinManager.h
@@ -82,9 +83,10 @@ target_link_libraries(crypto_fpga_trader
 add_executable(tests
         include/logging/dummy2.h
         src/client/BinanceClient.cpp
-        src/CoinManager.cpp              # Add this
-        src/Coin.cpp                     # Add this
-        src/Visualizer.cpp               # Add this
+        src/CoinManager.cpp
+        src/Coin.cpp
+        src/Logger.cpp
+        src/Visualizer.cpp
         tests/TestBinanceClient.cpp
         tests/TestCoinManager.cpp
 )
