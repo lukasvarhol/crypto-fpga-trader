@@ -86,6 +86,7 @@ add_executable(tests
         src/Coin.cpp
         src/Logger.cpp
         src/Visualizer.cpp
+        tests/TestLogger.cpp
         tests/TestBinanceClient.cpp
         tests/TestCoinManager.cpp
 )

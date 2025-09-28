@@ -10,7 +10,7 @@
 #include <string>
 #include <thread>
 #include <numeric>
-#include "../include/logging/logger.h"
+#include "../include/logging/Logger.h"
 
 // child logger class
 class TestableLogger : public Logger {
