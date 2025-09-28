@@ -36,7 +36,7 @@ void Logger::log(TYPE type, std::string data, std::string message) {
 std::string Logger::enum_to_string(TYPE type) {
   switch (type) {
     case info:
-      return "info";
+      return "info"; //TODO: convention is to make enums all UPPERCASE (refer to best practice page on wiki)
     case warning:
       return "warning";
     case error:

@@ -2,6 +2,8 @@
 #define LOGGER_H
 #include <string>
 
+#define LOG logger::getInstance() // it is cleaner to define a macro like this
+
 enum TYPE{info, warning, error};
 
 class Logger {

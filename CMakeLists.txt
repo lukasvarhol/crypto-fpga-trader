@@ -63,11 +63,11 @@ FetchContent_MakeAvailable(ixwebsocket)
 
 # Main executable
 add_executable(crypto_fpga_trader src/main.cpp
-        include/logging/dummy2.h
         src/client/BinanceClient.cpp
         include/client/BinanceClient.h
         src/Coin.cpp
         src/Logger.cpp
+        include/logging/Logger.h
         include/common/Coin.h
         src/CoinManager.cpp
         include/common/CoinManager.h
@@ -81,7 +81,6 @@ target_link_libraries(crypto_fpga_trader
 
 # Test executable
 add_executable(tests
-        include/logging/dummy2.h
         src/client/BinanceClient.cpp
         src/CoinManager.cpp
         src/Coin.cpp
