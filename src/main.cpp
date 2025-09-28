@@ -1,7 +1,7 @@
 #include "../include/logging/Logger.h"
 
-
 int main() {
-  Logger& logger = Logger::getInstance("../logs/");
-  logger.log(info, "data2", "message2");
+  Logger& logger = Logger::getInstance();
+  logger.log(warning, "data3", "message3");
+  return 0;
 }

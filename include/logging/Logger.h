@@ -5,17 +5,23 @@
 enum TYPE{info, warning, error};
 
 class Logger {
-  public:
-  static Logger& getInstance(const std::string& dir = "../logs/");
+private:
+  std::string directory;
+  Logger(const std::string& dir = "../logs/"): directory(dir) {}
+
+public:
+  Logger(const Logger& obj) = delete;
+  Logger& operator=(const Logger& obj) = delete;
+
+  static Logger& getInstance(const std::string& dir = "../logs/") {
+    static Logger instance(dir);
+    return instance;
+  }
+
   void log(TYPE type, std::string data, std::string message);
 
 private:
-  Logger(const std::string &dir);
-  std::string directory;
   std::string enum_to_string(TYPE type);
-
-  Logger(const Logger&) = delete;
-  Logger& operator=(const Logger&) = delete;
 };
 
 #endif //LOGGER_H
