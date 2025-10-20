@@ -4,6 +4,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "../include/common/CoinManager.h"
+#include "../include/client/BinanceClient.h"
 
 class CoinManagerTest : public ::testing::Test {
 protected:
@@ -47,4 +48,35 @@ TEST_F(CoinManagerTest, AddMultipleCoins) {
   std::vector<std::string> coins = {"test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9"};
   EXPECT_NO_THROW(manager->add_coins(coins));
   EXPECT_TRUE(manager->all_coins().size() == 9);
+}
+
+TEST_F(CoinManagerTest, AddEmptyCoin) {
+  std::vector<std::string> coins;
+  EXPECT_NO_THROW(manager->add_coins(coins));
+  EXPECT_TRUE(manager->all_coins().empty());
+}
+
+TEST_F(CoinManagerTest, AddCoinAndConnectDontWaitToConnect) {
+  BinanceClient binance_client(*manager);
+  manager->set_binance_client(&binance_client);
+
+  binance_client.setup_websocket("wss://stream.binance.com:9443/ws/websocket");
+
+  binance_client.connect();
+  std::vector<std::string> coins = {"btcusdt"};
+  EXPECT_NO_THROW(manager->add_coins(coins));
+  EXPECT_TRUE(manager->has_coin("btcusdt"));
+}
+
+TEST_F(CoinManagerTest, AddCoinAndConnectWaitToConnect) {
+  BinanceClient binance_client(*manager);
+  manager->set_binance_client(&binance_client);
+
+  binance_client.setup_websocket("wss://stream.binance.com:9443/ws/websocket");
+
+  binance_client.connect();
+  //TODO: wait for connection
+  std::vector<std::string> coins = {"btcusdt"};
+  EXPECT_NO_THROW(manager->add_coins(coins));
+  EXPECT_TRUE(manager->has_coin("btcusdt"));
 }

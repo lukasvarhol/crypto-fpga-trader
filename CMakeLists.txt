@@ -1,4 +1,17 @@
 cmake_minimum_required(VERSION 3.31)
+if(APPLE)
+    set(CMAKE_C_COMPILER "/usr/bin/clang" CACHE FILEPATH "C compiler" FORCE)
+    set(CMAKE_CXX_COMPILER "/usr/bin/clang++" CACHE FILEPATH "C++ compiler" FORCE)
+
+    # Use command-line tools SDK
+    execute_process(
+            COMMAND xcrun --show-sdk-path
+            OUTPUT_VARIABLE SDKROOT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(CMAKE_OSX_SYSROOT ${SDKROOT} CACHE PATH "SDK path" FORCE)
+endif()
+
 project(fpga_hft_engine)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -9,12 +22,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Platform-specific compiler flags
-if(MSVC)
-    set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG")
-else()
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -march=native -mtune=native")
-endif()
 
 include(FetchContent)
 
@@ -71,7 +78,10 @@ add_executable(crypto_fpga_trader src/main.cpp
         src/CoinManager.cpp
         include/common/CoinManager.h
         src/Visualizer.cpp
-        include/common/Visualizer.h)
+        include/common/Visualizer.h
+        src/MovingAverage.cpp
+        include/common/MovingAverage.h
+        )
 
 target_link_libraries(crypto_fpga_trader
         ixwebsocket
