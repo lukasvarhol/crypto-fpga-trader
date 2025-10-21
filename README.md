@@ -25,6 +25,7 @@
 #### *In Progress:*
 - Unit Tests for multi-coin trackign functionality and visualization
 - Build Logger for saving status messages
+- Basic moving average calculation
 
 #### *TODO:*
 **Week 3: Price History and Analysis**
