@@ -6,13 +6,13 @@
 #include <iostream>
 #include <vector>
 #include "../include/client/BinanceClient.h"
+#include "../include/common/MovingAverage.h"
 
 CoinManager::CoinManager() : binance_client_(nullptr) {}
 
 void CoinManager::set_binance_client(BinanceClient *client) {
   binance_client_ = client;
 }
-
 
 void CoinManager::add_coins(const std::vector<std::string> &symbols) {
   if (symbols.empty()) {

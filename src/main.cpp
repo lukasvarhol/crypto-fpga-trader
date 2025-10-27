@@ -10,6 +10,7 @@ int main() {
 
   CoinManager coin_manager;
 
+
   BinanceClient binance_client(coin_manager);
   coin_manager.set_binance_client(&binance_client);
 

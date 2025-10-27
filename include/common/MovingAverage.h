@@ -7,6 +7,8 @@
 #include <cstddef>
 #include <deque>
 
+#define MA_STANDARD_SIZE 512
+
 class MovingAverage{
   private:
     std::size_t window_size_;
