@@ -4,6 +4,7 @@
 #ifndef COIN_H
 #define COIN_H
 
+#include <ctime>
 #include <string>
 #include "MovingAverage.h"
 
