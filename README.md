@@ -22,15 +22,19 @@
 - Display multi-coin price tracker
 - Learn: C++ containers, data management
 
+**Week 4: Moving Average Calculation**
+- Basic moving average calculation
+- Display average price in CLI
+- Build Logger for saving status messages
+
 #### *In Progress:*
 - Unit Tests for multi-coin trackign functionality and visualization
-- Build Logger for saving status messages
-- Basic moving average calculation
+- Display trend indicators
+- Calculate percentage change
 
 #### *TODO:*
 **Week 3: Price History and Analysis**
 - Store historical price data
-- Calculate percentage changes
 - Save data to CSV files
 - Learn: File I/O, basic statistics
 
