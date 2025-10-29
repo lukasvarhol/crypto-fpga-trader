@@ -4,7 +4,9 @@
 #ifndef COIN_H
 #define COIN_H
 
+#include <ctime>
 #include <string>
+#include "MovingAverage.h"
 
 struct CoinData {
   std::string symbol;
@@ -21,6 +23,7 @@ private:
   long last_trade_id_;
   double last_trade_quantity_;
   long last_trade_time_;
+  MovingAverage average_manager_; //storing object is fine as copy is not performed (references stored in coin manager)
 
 public:
   Coin(const std::string& symbol);
@@ -30,6 +33,7 @@ public:
   long last_trade_id() const;
   double last_trade_quantity() const;
   long last_trade_time() const;
+  [[nodiscard]] const MovingAverage& moving_average() const;
 };
 
 #endif //COIN_H

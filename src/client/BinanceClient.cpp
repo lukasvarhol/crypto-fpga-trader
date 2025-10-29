@@ -177,6 +177,7 @@ void BinanceClient::Impl::handle_trade(const json &msg) {
   data.trade_time = msg["T"].get<long>();
 
   coin_manager_.update_coin_data(data);
+
   display_prices(coin_manager_);
 }
 
