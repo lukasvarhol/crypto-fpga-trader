@@ -27,9 +27,9 @@ bool MovingAverage::is_ready() const {
 }
 
 bool MovingAverage::is_price_below_MA(double current_price) const{
-  return current_price > get_value();
+  return current_price < get_value();
 }
 
 bool MovingAverage::is_price_above_MA(double current_price) const{
-  return current_price < get_value();
+  return current_price > get_value();
 }
